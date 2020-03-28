@@ -11,35 +11,25 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.common.math.LongMath;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -141,6 +131,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void initializeSchedule(){
+        for(int i = 0; i < 6; i++) {
+            addOneSchedule(0, i, 1, "", -1);
+        }
         for(int i = 6; i < gl_timetable.getChildCount(); i++) {
             gl_timetable.removeViewAt(i);
         }
@@ -203,22 +196,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void showSchedule() {
-        for(int row = 0; row < 22; row++) {
+        for(int row = 0; row < 30; row++) {
             for(int col = 0; col < 6; col++) {
                 if (col == 0) {
                     if (row % 2 == 0) {
-                        addOneSchedule(row, col, 2, String.valueOf(row / 2 + 9), -1); //시간을 보여주는 칸
+                        addOneSchedule(row + 1, col, 2, String.valueOf(row / 2 + 9), -1); //시간을 보여주는 칸
                     }
                 } else if (hasTime_main.contains(5 * row + col)) {
                     int id = indexToTimetable.get(5 * row + col);
                     double lectureTime = myTimeTable.get(id).getTime();
                     lectureTime = Math.ceil(lectureTime / 30);
                     String lectureName = myTimeTable.get(id).getName();
-                    addOneSchedule(row, col, (int)lectureTime, lectureName, id);
+                    addOneSchedule(row + 1, col, (int)lectureTime, lectureName, id);
                 } else if (hasTime_sub.contains(5 * row + col)) {
                     //넘어가기
                 } else {
-                    addOneSchedule(row, col, 1, "x", -1);
+                    addOneSchedule(row + 1, col, 1, "x", -1);
                 }
             }
         }
@@ -278,7 +271,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //일단 18시까지만 해놓음
     public int changeStartTime(String startTime) {
         SimpleDateFormat transFormat = new SimpleDateFormat("HH:mm");
         try {
@@ -323,11 +315,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return 90;
             } else if (startTimeDate.after(transFormat.parse("18:29")) && startTimeDate.before(transFormat.parse("19:00"))) {
                 return 95;
+            } else if (startTimeDate.after(transFormat.parse("18:59")) && startTimeDate.before(transFormat.parse("19:30"))) {
+                return 100;
+            } else if (startTimeDate.after(transFormat.parse("19:29")) && startTimeDate.before(transFormat.parse("20:00"))) {
+                return 105;
+            } else if (startTimeDate.after(transFormat.parse("19:59")) && startTimeDate.before(transFormat.parse("20:30"))) {
+                return 110;
+            } else if (startTimeDate.after(transFormat.parse("20:29")) && startTimeDate.before(transFormat.parse("21:00"))) {
+                return 115;
+            } else if (startTimeDate.after(transFormat.parse("20:59")) && startTimeDate.before(transFormat.parse("21:30"))) {
+                return 120;
+            } else if (startTimeDate.after(transFormat.parse("21:29")) && startTimeDate.before(transFormat.parse("22:00"))) {
+                return 125;
+            } else if (startTimeDate.after(transFormat.parse("21:59")) && startTimeDate.before(transFormat.parse("22:30"))) {
+                return 130;
+            } else if (startTimeDate.after(transFormat.parse("22:29")) && startTimeDate.before(transFormat.parse("23:00"))) {
+                return 135;
+            } else if (startTimeDate.after(transFormat.parse("22:59")) && startTimeDate.before(transFormat.parse("23:30"))) {
+                return 140;
+            } else if (startTimeDate.after(transFormat.parse("23:29")) && startTimeDate.before(transFormat.parse("24:00"))) {
+                return 145;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 100;
+        return 150;
     }
 
     //이번주 날짜를 받아옴
