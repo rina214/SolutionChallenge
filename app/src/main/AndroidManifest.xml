@@ -27,6 +27,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".BusActivity"/>
+        <activity android:name=".CourseInfoActivity" />
         <meta-data
             android:name="com.kakao.sdk.Appkey"
             android:value=" 6445bd61b0dafff169d25454489b0268" />

@@ -102,6 +102,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         Toast.makeText(MainActivity.this, myTimeTable.get(v.getId()).getName(), Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(getApplicationContext(), CourseInfoActivity.class);
+        intent.putExtra("code", myTimeTable.get(v.getId()).getCode());
+        intent.putExtra("name", myTimeTable.get(v.getId()).getName());
+        intent.putExtra("building", myTimeTable.get(v.getId()).getBuilding());
+        intent.putExtra("classroom", myTimeTable.get(v.getId()).getClassroom());
+        intent.putExtra("prof", myTimeTable.get(v.getId()).getProf());
+        intent.putExtra("day", myTimeTable.get(v.getId()).getDay());
+        intent.putExtra("start", myTimeTable.get(v.getId()).getStart());
+        intent.putExtra("time", myTimeTable.get(v.getId()).getTime());
+        startActivity(intent);
     }
 
     public void addOneSchedule(int row, int column, int size, String info, int id) {
@@ -156,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             allTimetable = allTimetable.replace("{", "");
                             allTimetable = allTimetable.replace("}", "");
                             allTimetable = allTimetable.replaceAll("=", ".");
-                            String[] arrayTimetable = allTimetable.split(",");
+                            final String[] arrayTimetable = allTimetable.split(",");
                             myTimetableIndex = 0;
                             for(int i = 0; i < arrayTimetable.length; i++) {
                                 if(i == 1) break; //나중에 없애기
@@ -174,13 +184,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     // Document found in the offline cache
                                                     DocumentSnapshot document = task.getResult();
                                                     Log.d(TAG, "Cached document data: " + document.getData());
+                                                    ArrayList<Long> longDay = (ArrayList<Long>)document.getData().get("Day");
+                                                    ArrayList<Integer> intDay = new ArrayList<>();
+                                                    for(int i = 0; i < longDay.size(); i++) {
+                                                        intDay.add(Integer.decode((longDay.get(i)).toString()));
+                                                    }
                                                     myTimeTable.add(new Course( document.getString("Building"),
                                                             document.getString("Classroom"),
-                                                            (ArrayList<Long>)document.getData().get("Day"),
+                                                            intDay,
                                                             document.getString("Name"),
                                                             document.getString("Prof"),
                                                             document.getString("Start"),
-                                                            (long)document.getData().get("Time")));
+                                                            (long)document.getData().get("Time"),
+                                                            arrayTimetable[myTimetableIndex]));
                                                     addTime((ArrayList<Long>)document.getData().get("Day"), document.getString("Start"), (long)document.getData().get("Time"), myTimetableIndex++);
                                                 } else {
                                                 Log.d(TAG, "Cached get failed: ", task.getException());

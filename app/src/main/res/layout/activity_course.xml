@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+        <TextView
+            android:id="@+id/tv_courseName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="과목"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:layout_margin="10dp"/>
+        <TextView
+            android:id="@+id/tv_courseBuilding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="건물"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"/>
+        <TextView
+            android:id="@+id/tv_courseProf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="교수명"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"/>
+        <TextView
+            android:id="@+id/tv_courseTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="시간"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_margin="20dp"
+            android:background="#000000" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="과목메모"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp" />
+        <ListView
+            android:id="@+id/lv_courseMemo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_margin="20dp"
+            android:background="#000000" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="특이사항 : "
+                android:textColor="#000000"
+                android:textSize="20sp" />
+            <TextView
+                android:id="@+id/tv_uniqueMemo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="없음"
+                android:textColor="#000000"
+                android:textSize="20sp"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="10dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="메모 : "
+                android:textColor="#000000"
+                android:textSize="20sp" />
+            <TextView
+                android:id="@+id/tv_normalMemo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="없음"
+                android:textColor="#000000"
+                android:textSize="20sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>
