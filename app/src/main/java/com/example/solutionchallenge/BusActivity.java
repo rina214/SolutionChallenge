@@ -12,7 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import net.daum.mf.map.api.MapView;
+//import net.daum.mf.map.api.MapView;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -31,7 +31,8 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
 
     //xml 변수
     private TextView xmlShowInfo;
-    private TextView bstop1, bstop2, bstop3, bstop4, bstop5, bstop6, bstop7, bstop8;
+    private TextView bstop1, bstop2, bstop3, bstop4, bstop5, bstop6, bstop7, bstop8, bstop9, bstop10, bstop11, bstop12, bstop13, bstop14,
+                     bstop15, bstop16, bstop17, bstop18, bstop19, bstop20, bstop21, bstop22, bstop23, bstop24, bstop25, bstop26, bstop27;
 
     // 파싱을 위한 필드 선언
     private URL url;
@@ -48,9 +49,9 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
     private HashMap<String, String> busStop = new HashMap<>();
     private String bstopId;
 
-    MapView mapView = new MapView(this);
+    //MapView mapView = new MapView(this);
 
-    RelativeLayout mapViewContainer = findViewById(R.id.map_view);
+    //RelativeLayout mapViewContainer = findViewById(R.id.map_view);
     //mapViewContainer.addView(mapView);
 
 
@@ -65,9 +66,9 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
         buffer = new StringBuffer();
         initializeBusStop();
 
-        String url ="daummaps://open";
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        startActivity(intent);
+        //String url ="daummaps://open";
+        //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        //startActivity(intent);
 
     }
 
@@ -108,6 +109,44 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
         bstop7.setOnClickListener(this);
         bstop8 = findViewById(R.id.bstop8);
         bstop8.setOnClickListener(this);
+        bstop9 = findViewById(R.id.bstop9);
+        bstop9.setOnClickListener(this);
+        bstop10 = findViewById(R.id.bstop10);
+        bstop10.setOnClickListener(this);
+        bstop11 = findViewById(R.id.bstop11);
+        bstop11.setOnClickListener(this);
+        bstop12 = findViewById(R.id.bstop12);
+        bstop12.setOnClickListener(this);
+        bstop13 = findViewById(R.id.bstop13);
+        bstop13.setOnClickListener(this);
+        bstop14 = findViewById(R.id.bstop14);
+        bstop14.setOnClickListener(this);
+        bstop15 = findViewById(R.id.bstop15);
+        bstop15.setOnClickListener(this);
+        bstop16 = findViewById(R.id.bstop16);
+        bstop16.setOnClickListener(this);
+        bstop17 = findViewById(R.id.bstop17);
+        bstop17.setOnClickListener(this);
+        bstop18 = findViewById(R.id.bstop18);
+        bstop18.setOnClickListener(this);
+        bstop19 = findViewById(R.id.bstop19);
+        bstop19.setOnClickListener(this);
+        bstop20 = findViewById(R.id.bstop20);
+        bstop20.setOnClickListener(this);
+        bstop21 = findViewById(R.id.bstop21);
+        bstop21.setOnClickListener(this);
+        bstop22 = findViewById(R.id.bstop22);
+        bstop22.setOnClickListener(this);
+        bstop23 = findViewById(R.id.bstop23);
+        bstop23.setOnClickListener(this);
+        bstop24 = findViewById(R.id.bstop24);
+        bstop24.setOnClickListener(this);
+        bstop25 = findViewById(R.id.bstop25);
+        bstop25.setOnClickListener(this);
+        bstop26 = findViewById(R.id.bstop26);
+        bstop26.setOnClickListener(this);
+        bstop27 = findViewById(R.id.bstop27);
+        bstop27.setOnClickListener(this);
     }
 
     @Override
@@ -136,6 +175,63 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
                 break;
             case R.id.bstop8:
                 bstopId = busStop.get("부산대법학관");
+                break;
+            case R.id.bstop9:
+                bstopId = busStop.get("부산대화학관");
+                break;
+            case R.id.bstop10:
+                bstopId = busStop.get("부산대예술관");
+                break;
+            case R.id.bstop11:
+                bstopId = busStop.get("부산대미술관");
+                break;
+            case R.id.bstop12:
+                bstopId = busStop.get("학생회관");
+                break;
+            case R.id.bstop13:
+                bstopId = busStop.get("부산대경암체육관");
+                break;
+            case R.id.bstop14:
+                bstopId = busStop.get("부산대음악관2");
+                break;
+            case R.id.bstop15:
+                bstopId = busStop.get("부산대미술관2");
+                break;
+            case R.id.bstop16:
+                bstopId = busStop.get("부산대예술관2");
+                break;
+            case R.id.bstop17:
+                bstopId = busStop.get("부산대생활환경관");
+                break;
+            case R.id.bstop18:
+                bstopId = busStop.get("부산대화학관2");
+                break;
+            case R.id.bstop19:
+                bstopId = busStop.get("부산대법학관2");
+                break;
+            case R.id.bstop20:
+                bstopId = busStop.get("부산대사회관2");
+                break;
+            case R.id.bstop21:
+                bstopId = busStop.get("새벽벌도서관2");
+                break;
+            case R.id.bstop22:
+                bstopId = busStop.get("부산대문창회관2");
+                break;
+            case R.id.bstop23:
+                bstopId = busStop.get("부산대본관2");
+                break;
+            case R.id.bstop24:
+                bstopId = busStop.get("부산대정문2");
+                break;
+            case R.id.bstop25:
+                bstopId = busStop.get("금정등기소");
+                break;
+            case R.id.bstop26:
+                bstopId = busStop.get("부산대후문");
+                break;
+            case R.id.bstop27:
+                bstopId = busStop.get("신한은행");
                 break;
         }
         showInformation();
@@ -200,7 +296,7 @@ public class BusActivity extends AppCompatActivity implements View.OnClickListen
         car1 = min1 = station1 = car2 = min2 = station2 = null;
         buffer = null;
         buffer = new StringBuffer();
-        xmlShowInfo.setText("");
+        xmlShowInfo.setText("버스 정보를 얻어오는 중입니다...");
 
         new Thread(new Runnable() {
             @Override

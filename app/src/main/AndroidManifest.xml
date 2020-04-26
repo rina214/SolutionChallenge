@@ -30,7 +30,7 @@
         <activity android:name=".CourseInfoActivity" />
         <meta-data
             android:name="com.kakao.sdk.Appkey"
-            android:value=" 6445bd61b0dafff169d25454489b0268" />
+            android:value="6445bd61b0dafff169d25454489b0268" />
     </application>
 
 </manifest>

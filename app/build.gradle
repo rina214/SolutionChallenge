@@ -31,7 +31,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:21.4.1' //파이어 스토어
     implementation 'com.google.firebase:firebase-auth:19.3.0'
 
-    implementation files('src\\main\\jniLibs\\libDaumMapAndroid.jar') //카카오맵
+    //implementation files('src\\main\\jniLibs\\libDaumMapAndroid.jar') //카카오맵
 
 }
 

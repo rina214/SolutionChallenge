@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 initializeSchedule();
                 showSchedule();
             }
-        }, 3000); // 3초후
+        }, 6000); // 3초후
 
         btn_bus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -137,6 +137,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 newSchedule.setOnClickListener(this);
             }
         }
+        if (id != -1)
+            newSchedule.setBackgroundResource(R.drawable.border_background);
         gl_timetable.addView(newSchedule);
     }
 
@@ -165,11 +167,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String allTimetable = document.getData().toString();
                             allTimetable = allTimetable.replace("{", "");
                             allTimetable = allTimetable.replace("}", "");
+                            allTimetable = allTimetable.replace(" ", "");
                             allTimetable = allTimetable.replaceAll("=", ".");
                             final String[] arrayTimetable = allTimetable.split(",");
                             myTimetableIndex = 0;
                             for(int i = 0; i < arrayTimetable.length; i++) {
-                                if(i == 1) break; //나중에 없애기
                                 db.collection("User")
                                         .document("201527516") //사용자 학번으로 바꿔야 함
                                         .collection("2020.01") //날짜를 입력으로 받아야 함
@@ -227,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else if (hasTime_sub.contains(5 * row + col)) {
                     //넘어가기
                 } else {
-                    addOneSchedule(row + 1, col, 1, "x", -1);
+                    addOneSchedule(row + 1, col, 1, "", -1);
                 }
             }
         }
