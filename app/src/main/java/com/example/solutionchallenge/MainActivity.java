@@ -2,21 +2,28 @@ package com.example.solutionchallenge;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,11 +37,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private GridLayout gl_timetable;
-    private TextView tv_time, tv_schedule, tv_dayOfMon, tv_dayOfTue, tv_dayOfWed, tv_dayOfThu, tv_dayOfFri, tv_toolbar;
+    private TextView tv_time, tv_schedule, tv_dayOfMon, tv_dayOfTue, tv_dayOfWed, tv_dayOfThu, tv_dayOfFri, tv_toolbar, tv_month;
     private ImageButton btn_bus, btn_before_week, btn_next_week;
     private Toolbar toolbar;
     private final String TAG = "myTag";
@@ -42,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<Integer> hasTime_main, hasTime_sub;
     private HashMap<Integer, Integer> indexToTimetable;
     private int myTimetableIndex;
+    private List<String> semester;
 
     final FirebaseFirestore db = FirebaseFirestore.getInstance(); //파이어스토어
 
@@ -65,16 +74,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionBar.setDisplayShowTitleEnabled(false); //기존 타이틀을 보이지 않게 함
 
         mCalendar = Calendar.getInstance();
-        //Date today = mCalendar.getTime(); //오늘
         updateThisWeek(); //이번주 날짜 설정
-        getSchedule();
+        getSchedule("2020.01");
         Handler mHandler = new Handler();
         mHandler.postDelayed(new Runnable()  {
             public void run() {
                 initializeSchedule();
                 showSchedule();
             }
-        }, 6000); // 3초후
+        }, 3000); // 3초후
 
         btn_bus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        Toast.makeText(MainActivity.this, myTimeTable.get(v.getId()).getName(), Toast.LENGTH_LONG).show();
         Intent intent = new Intent(getApplicationContext(), CourseInfoActivity.class);
         intent.putExtra("code", myTimeTable.get(v.getId()).getCode());
         intent.putExtra("name", myTimeTable.get(v.getId()).getName());
@@ -111,6 +118,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         intent.putExtra("day", myTimeTable.get(v.getId()).getDay());
         intent.putExtra("start", myTimeTable.get(v.getId()).getStart());
         intent.putExtra("time", myTimeTable.get(v.getId()).getTime());
+        String semester = tv_toolbar.getText().toString();
+        semester = semester.replace("년 ", ".");
+        semester = semester.replace("학기", "");
+        intent.putExtra("semester", semester);
         startActivity(intent);
     }
 
@@ -146,15 +157,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for(int i = 0; i < 6; i++) {
             addOneSchedule(0, i, 1, "", -1);
         }
-        for(int i = 6; i < gl_timetable.getChildCount(); i++) {
+        for(int i = gl_timetable.getChildCount() - 1; i > 5 ; i--) {
             gl_timetable.removeViewAt(i);
         }
     }
 
-    public void getSchedule() {
+    public void getSchedule(String semester) {
+        final String _semester = semester;
         db.collection("User")
                 .document("201527516") //사용자 학번으로 바꿔야 함
-                .collection("2020.01") //날짜를 입력으로 받아야 함
+                .collection(_semester)
                 .document("Timetable")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -174,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             for(int i = 0; i < arrayTimetable.length; i++) {
                                 db.collection("User")
                                         .document("201527516") //사용자 학번으로 바꿔야 함
-                                        .collection("2020.01") //날짜를 입력으로 받아야 함
+                                        .collection(_semester)
                                         .document("Timetable")
                                         .collection(arrayTimetable[i])
                                         .document("Info")
@@ -362,9 +374,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //이번주 날짜를 받아옴
     public void updateThisWeek() {
+        mCalendar = Calendar.getInstance();
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.MONDAY); //월요일
         Date dayOfWeek = mCalendar.getTime();
         tv_dayOfMon.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        tv_month.setText(new SimpleDateFormat("MM").format(dayOfWeek) + "월");
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.TUESDAY);
         dayOfWeek = mCalendar.getTime();
         tv_dayOfTue.setText(new SimpleDateFormat("dd").format(dayOfWeek));
@@ -385,6 +399,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.MONDAY);
         Date dayOfWeek = mCalendar.getTime();
         tv_dayOfMon.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        tv_month.setText(new SimpleDateFormat("MM").format(dayOfWeek) + "월");
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.TUESDAY);
         dayOfWeek = mCalendar.getTime();
         tv_dayOfTue.setText(new SimpleDateFormat("dd").format(dayOfWeek));
@@ -405,6 +420,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.MONDAY);
         Date dayOfWeek = mCalendar.getTime();
         tv_dayOfMon.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        tv_month.setText(new SimpleDateFormat("MM").format(dayOfWeek) + "월");
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.TUESDAY);
         dayOfWeek = mCalendar.getTime();
         tv_dayOfTue.setText(new SimpleDateFormat("dd").format(dayOfWeek));
@@ -417,6 +433,98 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.FRIDAY);
         dayOfWeek = mCalendar.getTime();
         tv_dayOfFri.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+    }
+
+    public void getWeek(int year, int month, int day) {
+        mCalendar.set(Calendar.YEAR, year);
+        mCalendar.set(Calendar.MONTH, month - 1);
+        mCalendar.set(Calendar.DATE, day);
+        mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.MONDAY);
+        Date dayOfWeek = mCalendar.getTime();
+        tv_month.setText(new SimpleDateFormat("MM").format(dayOfWeek) + "월");
+        tv_dayOfMon.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.TUESDAY);
+        dayOfWeek = mCalendar.getTime();
+        tv_dayOfTue.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.WEDNESDAY);
+        dayOfWeek = mCalendar.getTime();
+        tv_dayOfWed.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.THURSDAY);
+        dayOfWeek = mCalendar.getTime();
+        tv_dayOfThu.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.FRIDAY);
+        dayOfWeek = mCalendar.getTime();
+        tv_dayOfFri.setText(new SimpleDateFormat("dd").format(dayOfWeek));
+        mCalendar.set(Calendar.DAY_OF_MONTH, Calendar.MONTH);
+        dayOfWeek = mCalendar.getTime();
+        tv_month.setText(new SimpleDateFormat("MM").format(dayOfWeek) + "월");
+    }
+
+    public void deleteTimetable() {
+        myTimeTable.clear();
+        hasTime_main.clear();
+        hasTime_sub.clear();
+        indexToTimetable.clear();
+        for(int i = gl_timetable.getChildCount() - 1; i > 5 ; i--) {
+            gl_timetable.removeViewAt(i);
+        }
+    }
+
+    public void showAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        LayoutInflater inflater = getLayoutInflater();
+        View view = inflater.inflate(R.layout.alert_dialog_list, null);
+        builder.setView(view);
+
+        final ListView listview = view.findViewById(R.id.lv_alert_dialog_list);
+        final AlertDialog dialog = builder.create();
+
+        semester = new ArrayList<>();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, semester);
+        final String[] semesterList = {"2017.01", "2017.02", "2018.01", "2018.02", "2019.01", "2019.02", "2020.01"};
+        for (int i = 0; i < semesterList.length; i++) {
+            String semester_list = semesterList[i];
+            semester_list = semester_list.replace(".0", "년 ");
+            semester_list = semester_list.concat("학기");
+            semester.add(semester_list);
+        }
+
+        listview.setAdapter(adapter);
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String semester = semesterList[position];
+                int year, month, day;
+                year = Integer.parseInt(semester.substring(0, 4));
+                if (semester.substring(6).equals("1")) {
+                    month = 3;
+                    day = 2;
+                }
+                else {
+                    month = 9;
+                    day = 1;
+                }
+                Log.d(TAG, "Day : " + year + month + day);
+                getWeek(year, month, day);
+                semester = semester.replace(".0", "년 ");
+                semester = semester.concat("학기");
+                tv_toolbar.setText(semester);
+                deleteTimetable();
+                getSchedule(semesterList[position]);
+                Handler mHandler = new Handler();
+                mHandler.postDelayed(new Runnable()  {
+                    public void run() {
+                        showSchedule();
+                    }
+                }, 3000); // 3초후
+                dialog.dismiss();
+            }
+        });
+
+        //dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.show();
     }
 
     @Override
@@ -434,7 +542,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.action_menu2: { //학기 변경을 눌렀을 때
-
+                showAlertDialog();
                 break;
             }
             default:
@@ -457,5 +565,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tv_dayOfThu = findViewById(R.id.dayOfThu);
         tv_dayOfFri = findViewById(R.id.dayOfFri);
         tv_toolbar = findViewById(R.id.tv_toolbar);
+        tv_month = findViewById(R.id.tv_month);
     }
 }

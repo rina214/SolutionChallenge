@@ -2,6 +2,7 @@ package com.example.solutionchallenge;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -28,6 +30,7 @@ public class CourseInfoActivity extends AppCompatActivity {
     private TextView tv_courseName, tv_courseBuilding, tv_courseProf, tv_courseTime, tv_uniqueMemo, tv_normalMemo;
     private ListView lv_courseMemo;
     private List<String> data;
+    private final String TAG = "myTag";
 
     final FirebaseFirestore db = FirebaseFirestore.getInstance(); //파이어스토어
 
@@ -39,13 +42,28 @@ public class CourseInfoActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         code = intent.getStringExtra("code");
+        String semester = intent.getStringExtra("semester");
         setInfo(intent);
-        getData(code);
+        getData(code, semester);
 
         //과목 메모를 위한 list
         data = new ArrayList<>();
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, data);
         lv_courseMemo.setAdapter(adapter);
+        db.collection("User")
+                .document("201527516") //사용자 학번으로 바꿔야 함
+                .collection(semester)
+                .document("Timetable")
+                .collection(code)
+                .document("Course")
+                .collection("Index")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                    }
+                });
 
         data.add("리나");
         adapter.notifyDataSetChanged(); // 저장
@@ -90,10 +108,10 @@ public class CourseInfoActivity extends AppCompatActivity {
         tv_courseTime.setText(time);
     }
 
-    public void getData(String code) {
+    public void getData(String code, String semester) {
         db.collection("User")
                 .document("201527516") //사용자 학번으로 바꿔야 함
-                .collection("2020.01") //날짜를 입력으로 받아야 함
+                .collection(semester) //날짜를 입력으로 받아야 함
                 .document("Timetable")
                 .collection(code)
                 .document("Course")
