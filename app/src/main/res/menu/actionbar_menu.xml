@@ -11,4 +11,8 @@
         android:title="학기 변경"
         app:showAsAction="never"/>
 
+    <item android:id="@+id/action_menu3"
+        android:title="Due Date 편집"
+        app:showAsAction="never"/>
+
 </menu>

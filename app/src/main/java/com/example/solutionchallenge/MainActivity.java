@@ -6,6 +6,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -20,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -28,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,11 +43,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private GridLayout gl_timetable;
-    private TextView tv_time, tv_schedule, tv_dayOfMon, tv_dayOfTue, tv_dayOfWed, tv_dayOfThu, tv_dayOfFri, tv_toolbar, tv_month;
+    private TextView tv_time, tv_schedule, tv_dayOfMon, tv_dayOfTue, tv_dayOfWed, tv_dayOfThu, tv_dayOfFri, tv_toolbar, tv_month, tv_due;
     private ImageButton btn_bus, btn_before_week, btn_next_week;
     private Toolbar toolbar;
     private final String TAG = "myTag";
@@ -74,13 +80,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionBar.setDisplayShowTitleEnabled(false); //기존 타이틀을 보이지 않게 함
 
         mCalendar = Calendar.getInstance();
+        Date time = mCalendar.getTime();
+        String year = new SimpleDateFormat("yyyy").format(time);
+        String month = new SimpleDateFormat("MM").format(time);
+        String semester = "";
+        if (1 <= Integer.parseInt(month) && Integer.parseInt(month) <= 8)
+            semester = "01";
+        else
+            semester = "02";
         updateThisWeek(); //이번주 날짜 설정
-        getSchedule("2020.01");
+        getSchedule(year + "." + semester);
+        getDueDate();
+
+        final ProgressDialog oDialog = new ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog);
+        oDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        oDialog.setMessage("잠시만 기다려주세요.");
+        oDialog.show();
         Handler mHandler = new Handler();
         mHandler.postDelayed(new Runnable()  {
             public void run() {
                 initializeSchedule();
                 showSchedule();
+                oDialog.dismiss();
             }
         }, 3000); // 3초후
 
@@ -512,10 +533,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tv_toolbar.setText(semester);
                 deleteTimetable();
                 getSchedule(semesterList[position]);
+                final ProgressDialog oDialog = new ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog);
+                oDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                oDialog.setMessage("잠시만 기다려 주세요.");
+                oDialog.show();
                 Handler mHandler = new Handler();
                 mHandler.postDelayed(new Runnable()  {
                     public void run() {
                         showSchedule();
+                        oDialog.dismiss();
                     }
                 }, 3000); // 3초후
                 dialog.dismiss();
@@ -525,6 +551,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //dialog.setCancelable(false);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
+    }
+
+    public void getDueDate() {
+        db.collection("User")
+                .document("201527516")
+                .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                tv_due.setText(document.getString("DueDate"));
+                            } else {
+                                Log.d(TAG, "No such document");
+                            }
+                        } else {
+                            Log.d(TAG, "get failed with ", task.getException());
+                        }
+                    }
+                });
     }
 
     @Override
@@ -543,6 +590,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             case R.id.action_menu2: { //학기 변경을 눌렀을 때
                 showAlertDialog();
+                break;
+            }
+            case R.id.action_menu3: { //Due Date 편집을 눌렀을 때
+                final EditText edittext = new EditText(this);
+                edittext.setText(tv_due.getText());
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Due Date");
+                builder.setView(edittext);
+                builder.setPositiveButton("입력",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                tv_due.setText(edittext.getText().toString());
+                                Map<String, String> map = new HashMap<>();
+                                map.put("DueDate", edittext.getText().toString());
+                                db.collection("User")
+                                        .document("201527516")
+                                        .update("DueDate", edittext.getText().toString())
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                Log.d(TAG, "DocumentSnapshot successfully updated!");
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.w(TAG, "Error updating document", e);
+                                            }
+                                        });
+                            }
+                        });
+                builder.setNegativeButton("취소",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                builder.show();
                 break;
             }
             default:
@@ -566,5 +651,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tv_dayOfFri = findViewById(R.id.dayOfFri);
         tv_toolbar = findViewById(R.id.tv_toolbar);
         tv_month = findViewById(R.id.tv_month);
+        tv_due = findViewById(R.id.tv_due);
     }
 }
