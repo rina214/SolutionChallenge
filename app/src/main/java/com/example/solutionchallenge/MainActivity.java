@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showSchedule();
                 oDialog.dismiss();
             }
-        }, 3000); // 3초후
+        }, 2000); // 2초후
 
         btn_bus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,19 +130,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        int index = indexToTimetable.get(v.getId());
         Intent intent = new Intent(getApplicationContext(), CourseInfoActivity.class);
-        intent.putExtra("code", myTimeTable.get(v.getId()).getCode());
-        intent.putExtra("name", myTimeTable.get(v.getId()).getName());
-        intent.putExtra("building", myTimeTable.get(v.getId()).getBuilding());
-        intent.putExtra("classroom", myTimeTable.get(v.getId()).getClassroom());
-        intent.putExtra("prof", myTimeTable.get(v.getId()).getProf());
-        intent.putExtra("day", myTimeTable.get(v.getId()).getDay());
-        intent.putExtra("start", myTimeTable.get(v.getId()).getStart());
-        intent.putExtra("time", myTimeTable.get(v.getId()).getTime());
+        intent.putExtra("code", myTimeTable.get(index).getCode());
+        intent.putExtra("name", myTimeTable.get(index).getName());
+        intent.putExtra("building", myTimeTable.get(index).getBuilding());
+        intent.putExtra("classroom", myTimeTable.get(index).getClassroom());
+        intent.putExtra("prof", myTimeTable.get(index).getProf());
+        intent.putExtra("day", myTimeTable.get(index).getDay());
+        intent.putExtra("start", myTimeTable.get(index).getStart());
+        intent.putExtra("time", myTimeTable.get(index).getTime());
         String semester = tv_toolbar.getText().toString();
-        semester = semester.replace("년 ", ".");
+        semester = semester.replace("년 ", ".0");
         semester = semester.replace("학기", "");
+        if (v.getId() % 5 == 1)
+            mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.MONDAY);
+        else if (v.getId() % 5 == 2)
+            mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.TUESDAY);
+        else if (v.getId() % 5 == 3)
+            mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.WEDNESDAY);
+        else if (v.getId() % 5 == 4)
+            mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.THURSDAY);
+        else if (v.getId() % 5 == 0)
+            mCalendar.set(Calendar.DAY_OF_WEEK,Calendar.FRIDAY);
+        Date dayOfWeek = mCalendar.getTime();
+        intent.putExtra("date", new SimpleDateFormat("yyyyMMdd").format(dayOfWeek));
         intent.putExtra("semester", semester);
+
         startActivity(intent);
     }
 
@@ -203,8 +217,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             allTimetable = allTimetable.replace(" ", "");
                             allTimetable = allTimetable.replaceAll("=", ".");
                             final String[] arrayTimetable = allTimetable.split(",");
+                            Log.d(TAG, "시간표: " + allTimetable);
                             myTimetableIndex = 0;
                             for(int i = 0; i < arrayTimetable.length; i++) {
+                                final String code = arrayTimetable[i];
                                 db.collection("User")
                                         .document("201527516") //사용자 학번으로 바꿔야 함
                                         .collection(_semester)
@@ -231,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                             document.getString("Prof"),
                                                             document.getString("Start"),
                                                             (long)document.getData().get("Time"),
-                                                            arrayTimetable[myTimetableIndex]));
+                                                            code));
                                                     addTime((ArrayList<Long>)document.getData().get("Day"), document.getString("Start"), (long)document.getData().get("Time"), myTimetableIndex++);
                                                 } else {
                                                 Log.d(TAG, "Cached get failed: ", task.getException());
@@ -258,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     double lectureTime = myTimeTable.get(id).getTime();
                     lectureTime = Math.ceil(lectureTime / 30);
                     String lectureName = myTimeTable.get(id).getName();
-                    addOneSchedule(row + 1, col, (int)lectureTime, lectureName, id);
+                    addOneSchedule(row + 1, col, (int)lectureTime, lectureName, 5 * row + col);
                 } else if (hasTime_sub.contains(5 * row + col)) {
                     //넘어가기
                 } else {
