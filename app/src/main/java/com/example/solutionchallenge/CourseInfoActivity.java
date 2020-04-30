@@ -210,9 +210,38 @@ public class CourseInfoActivity extends AppCompatActivity implements View.OnClic
                         .setTitle(tv_courseName.getText()).setMessage("삭제 하시겠습니까?")
                         .setPositiveButton("삭제", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
+                                db.collection("User")
+                                        .document(MainActivity.id)
+                                        .collection(semester)
+                                        .document("Timetable")
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    DocumentSnapshot document = task.getResult();
+                                                    if (document.exists()) {
+                                                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                                        if (document.getData().size() == 1) {
+                                                            Map<String,Object> updates = new HashMap<>();
+                                                            updates.put("temp", "true");
+                                                            db.collection("User")
+                                                                    .document(MainActivity.id)
+                                                                    .collection(semester)
+                                                                    .document("Timetable")
+                                                                    .set(updates);
+                                                        }
+                                                    } else {
+                                                        Log.d(TAG, "No such document");
+                                                    }
+                                                } else {
+                                                    Log.d(TAG, "get failed with ", task.getException());
+                                                }
+                                            }
+                                        });
                                 Map<String,Object> updates = new HashMap<>();
                                 updates.put(code.substring(0, 7), FieldValue.delete());
-                                Log.d(TAG, code.substring(0, 7) );
+                                Log.d(TAG, code.substring(0, 7));
                                 db.collection("User")
                                         .document(MainActivity.id)
                                         .collection(semester)

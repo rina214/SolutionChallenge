@@ -38,7 +38,6 @@ public class SignActivity extends AppCompatActivity {
         final FirebaseFirestore db = FirebaseFirestore.getInstance(); //파이어스토어
 
         login = findViewById(R.id.login);
-        findId = findViewById(R.id.findId);
         findPassword = findViewById(R.id.findPassword);
         signUp = findViewById(R.id.signUp);
         id = findViewById(R.id.loginId);
@@ -96,13 +95,5 @@ public class SignActivity extends AppCompatActivity {
                 startActivity(intent); //액티비티 띄우기 //회원가입 페이지로 이동
             }
         });
-
-        findId.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
     }
 }
