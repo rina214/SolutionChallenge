@@ -72,8 +72,6 @@ public class CourseInfoActivity extends AppCompatActivity implements View.OnClic
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     tv_courseMemo.setText(edittext.getText().toString());
-                                    Map<String, String> map = new HashMap<>();
-                                    map.put("Memo", edittext.getText().toString());
                                     Log.d(TAG, "code: " + code);
                                     db.collection("User")
                                             .document("201527516")

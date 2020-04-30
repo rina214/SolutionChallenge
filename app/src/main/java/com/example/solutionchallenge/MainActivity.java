@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -26,14 +27,13 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -57,10 +57,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HashMap<Integer, Integer> indexToTimetable;
     private int myTimetableIndex;
     private List<String> semester;
+    private String currentSemester;
+    private Calendar mCalendar;
 
     final FirebaseFirestore db = FirebaseFirestore.getInstance(); //파이어스토어
 
-    private Calendar mCalendar;
+    public static Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         getXmlId();
+        mContext = this;
 
         myTimeTable = new ArrayList<>();
         hasTime_main = new ArrayList<>();
@@ -89,21 +92,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else
             semester = "02";
         updateThisWeek(); //이번주 날짜 설정
-        getSchedule(year + "." + semester);
+        currentSemester = year + "." + semester;
+        getSchedule(currentSemester);
         getDueDate();
-
-        final ProgressDialog oDialog = new ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog);
-        oDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        oDialog.setMessage("잠시만 기다려주세요.");
-        oDialog.show();
-        Handler mHandler = new Handler();
-        mHandler.postDelayed(new Runnable()  {
-            public void run() {
-                initializeSchedule();
-                showSchedule();
-                oDialog.dismiss();
-            }
-        }, 2000); // 2초후
 
         btn_bus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -250,8 +241,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                             code));
                                                     addTime((ArrayList<Long>)document.getData().get("Day"), document.getString("Start"), (long)document.getData().get("Time"), myTimetableIndex++);
                                                 } else {
-                                                Log.d(TAG, "Cached get failed: ", task.getException());
-                                            }
+                                                    Log.d(TAG, "Cached get failed: ", task.getException());
+                                                }
+                                                showSchedule();
                                             }
                                         });
                             }
@@ -336,6 +328,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 hasTime_sub.add(intTime + i / 6);
             }
         }
+    }
+
+    public void addCourse(String code, Object object) {
+        Log.d(TAG, code);
+        DocumentReference timetable = db.collection("User")
+                .document("201527516")
+                .collection(currentSemester)
+                .document("Timetable");
+        timetable.update(code.substring(0, 7), code.substring(8, 11))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully updated!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error updating document", e);
+                    }
+                });
+        Map<String, Object> data = new HashMap<>();
+        data.put("Memo", "메모를 입력해주세요.");
+        timetable.collection(code)
+                .document("Course")
+                .set(data);
+        timetable.collection(code)
+                .document("Info")
+                .set(object);
+        timetable.collection(code)
+                .document("Daily")
+                .collection("Date")
+                .document("temp")
+                .set(data);
     }
 
     public int changeStartTime(String startTime) {
@@ -549,17 +575,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tv_toolbar.setText(semester);
                 deleteTimetable();
                 getSchedule(semesterList[position]);
-                final ProgressDialog oDialog = new ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog);
-                oDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                oDialog.setMessage("잠시만 기다려 주세요.");
-                oDialog.show();
-                Handler mHandler = new Handler();
-                mHandler.postDelayed(new Runnable()  {
-                    public void run() {
-                        showSchedule();
-                        oDialog.dismiss();
-                    }
-                }, 3000); // 3초후
+                showSchedule();
                 dialog.dismiss();
             }
         });
@@ -601,7 +617,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_menu1: { //과목 추가를 눌렀을 때
-
+                CustomDialog_CourseList oDialog = new CustomDialog_CourseList(this);
+                oDialog.show();
                 break;
             }
             case R.id.action_menu2: { //학기 변경을 눌렀을 때
