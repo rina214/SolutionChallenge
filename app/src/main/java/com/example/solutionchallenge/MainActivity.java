@@ -35,7 +35,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -57,12 +60,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HashMap<Integer, Integer> indexToTimetable;
     private int myTimetableIndex;
     private List<String> semester;
-    private String currentSemester;
+    private String currentSemester, due = "";
+    public static String id;
     private Calendar mCalendar;
+    private ArrayList<String> arrayCourseName, arrayTimetable;
+    private int count;
 
     final FirebaseFirestore db = FirebaseFirestore.getInstance(); //파이어스토어
 
     public static Context mContext;
+    public static MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +77,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         getXmlId();
+        Intent homeIntent = getIntent();
+        id = homeIntent.getStringExtra("id"); //Intent에서 ID를 받아옴
         mContext = this;
+        mainActivity = MainActivity.this;
 
         myTimeTable = new ArrayList<>();
         hasTime_main = new ArrayList<>();
@@ -165,17 +175,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         newSchedule.setText(info);
         newSchedule.setTextColor(Color.BLACK);
         if(column == 0) {
-            newSchedule.setGravity(Gravity.CENTER_HORIZONTAL);
+            newSchedule.setGravity(Gravity.CENTER_VERTICAL|Gravity.CENTER_HORIZONTAL);
             newSchedule.setTextSize(10);
         } else {
-            newSchedule.setGravity(Gravity.CENTER_HORIZONTAL);
+            newSchedule.setGravity(Gravity.CENTER_VERTICAL|Gravity.CENTER_HORIZONTAL);
             if(id != -1) {
                 newSchedule.setId(id);
                 newSchedule.setOnClickListener(this);
             }
         }
         if (id != -1)
-            newSchedule.setBackgroundResource(R.drawable.border_background);
+            newSchedule.setBackgroundColor(Color.parseColor("#5B91BAFF"));
+            //newSchedule.setBackgroundResource(R.drawable.border_background);
         gl_timetable.addView(newSchedule);
     }
 
@@ -191,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void getSchedule(String semester) {
         final String _semester = semester;
         db.collection("User")
-                .document("201527516") //사용자 학번으로 바꿔야 함
+                .document(id) //사용자 학번으로 바꿔야 함
                 .collection(_semester)
                 .document("Timetable")
                 .get()
@@ -207,16 +218,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             allTimetable = allTimetable.replace("}", "");
                             allTimetable = allTimetable.replace(" ", "");
                             allTimetable = allTimetable.replaceAll("=", ".");
-                            final String[] arrayTimetable = allTimetable.split(",");
-                            Log.d(TAG, "시간표: " + allTimetable);
+                            String[] arrayTimetableTemp = allTimetable.split(",");
+                            arrayTimetable = new ArrayList<>();
+                            if (arrayTimetableTemp[0].equals("temp.true")) {}
+                            else {
+                                for(int i = 0; i < arrayTimetableTemp.length; i++)
+                                    arrayTimetable.add(arrayTimetableTemp[i]);
+                            }
                             myTimetableIndex = 0;
-                            for(int i = 0; i < arrayTimetable.length; i++) {
-                                final String code = arrayTimetable[i];
+                            for(int i = 0; i < arrayTimetable.size(); i++) {
+                                Log.d(TAG, "i: " + i);
+                                final String code = arrayTimetable.get(i);
                                 db.collection("User")
-                                        .document("201527516") //사용자 학번으로 바꿔야 함
+                                        .document(id)
                                         .collection(_semester)
                                         .document("Timetable")
-                                        .collection(arrayTimetable[i])
+                                        .collection(arrayTimetable.get(i))
                                         .document("Info")
                                         .get()
                                         .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -247,6 +264,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                             }
                                         });
                             }
+
                         } else {
                             Log.d(TAG, "Cached get failed: ", task.getException());
                         }
@@ -332,10 +350,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void addCourse(String code, Object object) {
         Log.d(TAG, code);
-        DocumentReference timetable = db.collection("User")
-                .document("201527516")
+        final DocumentReference timetable = db.collection("User")
+                .document(id)
                 .collection(currentSemester)
                 .document("Timetable");
+        timetable.get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                if (document.getData().containsKey("temp")) {
+                                    Map<String,Object> updates = new HashMap<>();
+                                    updates.put("temp", FieldValue.delete());
+                                    timetable.update(updates)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+
+                                                }
+                                            });
+                                }
+                            } else {
+                                Log.d(TAG, "No such document");
+                            }
+                        } else {
+                            Log.d(TAG, "get failed with ", task.getException());
+                        }
+                    }
+                });
         timetable.update(code.substring(0, 7), code.substring(8, 11))
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -359,9 +404,117 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .set(object);
         timetable.collection(code)
                 .document("Daily")
-                .collection("Date")
-                .document("temp")
                 .set(data);
+        final ProgressDialog oDialog = new ProgressDialog(this,
+                android.R.style.Theme_DeviceDefault_Light_Dialog);
+        oDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        oDialog.setMessage("잠시만 기다려 주세요.");
+
+        oDialog.show();
+        Handler delayHandler = new Handler();
+        delayHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                deleteTimetable();
+                getSchedule(currentSemester);
+                showSchedule();
+                oDialog.dismiss();
+            }
+        }, 1000); // 3초 지연을 준 후 시작
+
+    }
+
+    public void getDueDate() {
+        due = "";
+        db.collection("User")
+                .document(id)
+                .collection(currentSemester)
+                .document("Timetable")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                Log.d(TAG, "과목 코드: " + document.getData());
+                                String code = document.getData().toString();
+                                code = code.replace("{", "");
+                                code = code.replace("}", "");
+                                code = code.replace(" ", "");
+                                code = code.replaceAll("=", ".");
+                                final String[] arrayCode = code.split(",");
+                                final Calendar today = Calendar.getInstance();
+                                Date dateToday = today.getTime();
+                                final String strToday = new SimpleDateFormat("yyyyMMdd").format(dateToday);
+                                arrayCourseName = new ArrayList<>();
+                                for (int i = 0; i < arrayCode.length; i++) {
+                                    arrayCourseName.add("temp");
+                                    final int index = i;
+                                    db.collection("User")
+                                            .document(id)
+                                            .collection(currentSemester)
+                                            .document("Timetable")
+                                            .collection(arrayCode[i])
+                                            .document("Info")
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                    if (task.isSuccessful()) {
+                                                        DocumentSnapshot document = task.getResult();
+                                                        if (document.exists()) {
+                                                            Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                                            arrayCourseName.set(index, document.getString("Name"));
+                                                        } else {
+                                                            Log.d(TAG, "No such document");
+                                                        }
+                                                    } else {
+                                                        Log.d(TAG, "get failed with ", task.getException());
+                                                    }
+                                                }
+                                            });
+                                    db.collection("User")
+                                            .document(id)
+                                            .collection(currentSemester)
+                                            .document("Timetable")
+                                            .collection(arrayCode[i])
+                                            .document("Daily")
+                                            .collection("DueDate")
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                    if (task.isSuccessful()) {
+                                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                                            Log.d("DueMemo", document.getId() + " => " + document.getData());
+                                                            SimpleDateFormat transFormat = new SimpleDateFormat("yyyyMMdd");
+                                                            try {
+                                                                Date today = transFormat.parse(strToday);
+                                                                Date memo = transFormat.parse(document.getId());
+                                                                if (today.getTime() <= memo.getTime()) {
+                                                                    due += "(" + document.getId().substring(4, 8) + ") " + arrayCourseName.get(index) + " ";
+                                                                            //+ ": " + document.getString("DueMemo") + " ";
+                                                                }
+                                                            } catch (Exception e) {
+                                                                e.printStackTrace();
+                                                            }
+                                                        }
+                                                        tv_due.setText(due);
+                                                    } else {
+                                                        Log.d(TAG, "Error getting documents: ", task.getException());
+                                                    }
+                                                }
+                                            });
+                                }
+                            } else {
+                                Log.d(TAG, "No such document");
+                            }
+                        } else {
+                            Log.d(TAG, "get failed with ", task.getException());
+                        }
+                    }
+                });
     }
 
     public int changeStartTime(String startTime) {
@@ -585,27 +738,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
-    public void getDueDate() {
-        db.collection("User")
-                .document("201527516")
-                .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            DocumentSnapshot document = task.getResult();
-                            if (document.exists()) {
-                                Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                                tv_due.setText(document.getString("DueDate"));
-                            } else {
-                                Log.d(TAG, "No such document");
-                            }
-                        } else {
-                            Log.d(TAG, "get failed with ", task.getException());
-                        }
-                    }
-                });
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) { //메뉴를 얻어옴 (오른쪽 상단에 있는 메뉴 버튼)
         MenuInflater menuInflater = getMenuInflater();
@@ -625,43 +757,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showAlertDialog();
                 break;
             }
-            case R.id.action_menu3: { //Due Date 편집을 눌렀을 때
-                final EditText edittext = new EditText(this);
-                edittext.setText(tv_due.getText());
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Due Date");
-                builder.setView(edittext);
-                builder.setPositiveButton("입력",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                tv_due.setText(edittext.getText().toString());
-                                Map<String, String> map = new HashMap<>();
-                                map.put("DueDate", edittext.getText().toString());
-                                db.collection("User")
-                                        .document("201527516")
-                                        .update("DueDate", edittext.getText().toString())
-                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void aVoid) {
-                                                Log.d(TAG, "DocumentSnapshot successfully updated!");
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Log.w(TAG, "Error updating document", e);
-                                            }
-                                        });
+            case R.id.action_menu3: { //로그아웃을 눌렀을 때
+                new AlertDialog.Builder(MainActivity.this) //다이얼로그를 띄움
+                        .setTitle("로그아웃").setMessage("로그아웃 하시겠습니까?")
+                        .setPositiveButton("로그아웃", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                SaveSharedPreference.clearUserName(MainActivity.this); //자동 로그인 해제
+                                Intent intent = new Intent(getApplicationContext(), SignActivity.class);
+                                startActivity(intent); //SignActivity로 이동
+                                finish(); //SettingsActivity 종료
+                                MainActivity MA = MainActivity.mainActivity;
+                                MA.finish(); //MainActivity 종료
                             }
-                        });
-                builder.setNegativeButton("취소",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
+                        })
+                        .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
 
                             }
-                        });
-                builder.show();
-                break;
+                        })
+                        .show();
             }
             default:
                 break;

@@ -12,7 +12,7 @@
         app:showAsAction="never"/>
 
     <item android:id="@+id/action_menu3"
-        android:title="Due Date 편집"
+        android:title="로그아웃"
         app:showAsAction="never"/>
 
 </menu>
